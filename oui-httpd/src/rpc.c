@@ -112,9 +112,7 @@ static void rpc_error(struct uh_connection *conn, int type, json_t *req)
     conn->send(conn, buf, size);
 
     json_decref(ret);
-
-    if (ret)
-        json_decref(req);
+    json_decref(req);
 
     conn->done(conn);
 }
@@ -165,6 +163,7 @@ static void rpc_resp(struct uh_connection *conn, json_t *req, json_t *result)
 
     free(s);
 
+    json_decref(req);
     json_decref(root);
 
     conn->done(conn);
@@ -422,38 +421,38 @@ static void handle_rpc(struct uh_connection *conn, const char *method, json_t *p
         size_t size;
 
         if (!params || json_typeof(params) != JSON_ARRAY) {
-            rpc_error(conn, RPC_ERROR_PARAMS, NULL);
+            rpc_error(conn, RPC_ERROR_PARAMS, req);
             return;
         }
 
         size = json_array_size(params);
         if (size != 3 && size != 4) {
-            rpc_error(conn, RPC_ERROR_PARAMS, NULL);
+            rpc_error(conn, RPC_ERROR_PARAMS, req);
             return;
         }
 
         sid = json_array_get_string(params, 0);
         if (!sid) {
-            rpc_error(conn, RPC_ERROR_PARAMS, NULL);
+            rpc_error(conn, RPC_ERROR_PARAMS, req);
             return;
         }
 
         object = json_array_get_string(params, 1);
         if (!object) {
-            rpc_error(conn, RPC_ERROR_PARAMS, NULL);
+            rpc_error(conn, RPC_ERROR_PARAMS, req);
             return;
         }
 
         method = json_array_get_string(params, 2);
         if (!method) {
-            rpc_error(conn, RPC_ERROR_PARAMS, NULL);
+            rpc_error(conn, RPC_ERROR_PARAMS, req);
             return;
         }
 
         if (size == 4) {
             json = json_array_get(params, 3);
             if (!json_is_object(json)) {
-                rpc_error(conn, RPC_ERROR_PARAMS, NULL);
+                rpc_error(conn, RPC_ERROR_PARAMS, req);
                 return;
             }
             args = json;
@@ -471,13 +470,13 @@ static void handle_rpc(struct uh_connection *conn, const char *method, json_t *p
 
         size = json_array_size(params);
         if (size < 2) {
-            rpc_error(conn, RPC_ERROR_PARAMS, NULL);
+            rpc_error(conn, RPC_ERROR_PARAMS, req);
             return;
         }
 
         sid = json_array_get_string(params, 0);
         if (!sid) {
-            rpc_error(conn, RPC_ERROR_PARAMS, NULL);
+            rpc_error(conn, RPC_ERROR_PARAMS, req);
             return;
         }
 
@@ -524,7 +523,7 @@ void serve_rpc(struct uh_connection *conn)
         handle_rpc(conn, method, params, root);
         break;
     default:
-        rpc_error(conn, RPC_ERROR_PARSE, NULL);
+        rpc_error(conn, RPC_ERROR_PARSE, root);
         return;
     }
 }
