@@ -8,8 +8,8 @@ include(FindPkgConfig)
 
 find_package(Libev REQUIRED)
 find_package(Libuhttpd REQUIRED)
-find_package(Lua REQUIRED)
 
+pkg_search_module(LUA REQUIRED lua5.1 lua-5.1)
 pkg_search_module(JANSSON REQUIRED jansson)
 
 add_definitions(-O -Wall -Werror --std=gnu99 -D_GNU_SOURCE)
